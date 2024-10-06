@@ -1,0 +1,45 @@
+[메서드 선언]
+- 리시버를 func 키워드와 함수 이름 사이에 소괄호로 명시
+- 리시버를 사용해서 메서드를 정의하는 코드
+    func (r Rabbit) info() int {
+        return r.width * r.height
+    }
+- (r Rabbit) <- 리시버, 리시버 덕분에 info() 메서드가 Rabbit 타입에 속함을 알 수 있음
+- 리시버로는 모든 로컬 타입들이 가능, 로컬 타입이란 해당 패키지 안에 type 키워드로 선언된 타입들이
+    ex) 패키지 내 선언된 구조체, 별칭 타입들
+- 메서드 정의는 같은 패키지 내 어디에도 위치할 수 있지만, 리시버 타입이 선언된 파일 안에 정의하는 것이 일반적
+- (별칭 리시버 타입)
+    모든 로컬 타입이 리시버 타입으로 가능하기에 별칭 타입도 리시버가 될 수 있고, 메서드를 가질 수 있음
+    int와 같은 내장 타입들도 별칭 타입을 활용하여 메서드를 가질 수 있음
+    type myInt int
+    func (a myInt) add(b int) int  {
+        return int(a) + b
+    }
+
+
+[포인터 메서드 vs 값 타입 메서드]
+- 리시버를 값 타입과 포인터로 정의할 수 있다
+    type account struct {
+        balance int
+        firstName string
+        lastName string
+    }
+
+    // 포인트 메서드
+    func (a1 *account) withdrawPointer(amount int) {
+        a1.balance -= amount
+    }
+
+    // 값 타입 메서드
+    func (a2 account) withdrawValue(amount int) {
+        a2.balance -= amount
+    }
+
+- 포인터 메서드를 호출하면 포인터가 가리키고 있는 메모리의 주소값이 복사됨
+    -> 메서드 내부에서 리시버의 값을 변경시킬 수 있음
+- 값 타입 메서드를 호출하면 리시버 타입의 모든 값이 '복사'됨
+    -> 호출하는 쪽과 메서드 내부의 값은 별도의 인스턴스로 독립되기에 내부에서 리시버의 값을 변경시킬 수 없음
+    -> 복사되는 양에 따라 성능 상 문제가 될 수 있음
+
+
+

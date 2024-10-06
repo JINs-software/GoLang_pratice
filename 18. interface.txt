@@ -1,0 +1,99 @@
+[인터페이스]
+- "메서드 구현을 포함한 구체화된 객체가 아닌 추상화된 객체"로 상호작용 가능
+
+type DuckInterface interface {
+    // 내부 메서드 집합
+    Fly()
+    Walk(distance int) int
+}
+- 인터페이스도 변수 선언이 가능하다. type 키워드를 붙이는 것이 어색하지 않음
+
+[인터페이스 선언 주의사항]
+- 메서드는 반드시 메서드 명이 있어야 함
+- 매개변수와 반환이 다르더라도 같은 이름의 메서드가 있으면 안됨
+- 인터페이스에서 메서드 구현을 포함하지 않음
+
+
+[서비스 사용자 중심 코딩]
+- 덕 타이핑: 타입 선언 시 인터페이스 구현 여부를 명시(자버차럼)적으로 나타낼 필요 없이 인터페이스에 정의한 메서드 포함 여부만으로 결정하는 방식
+    type Stringer interface {
+        String() string
+    }
+
+    type Student struct {
+        ...
+    }
+    func (s *Student) String() string { .. }
+    // => Student 타입 선언 시 Stringer 인터페이스 포함 여부를 명시적으로 나타내지 않아도, 
+    /       String() 인터페이스 메서드를 포함하고 있는 것 만으로 Stringer 인터페이스로 사용할 수 있음
+
+- Post, Fedex 예시에서 Sender 인터페이스는 서비스 제공자인 Post나 Fedex가 아닌 패키지를 사용하는 쪽에서 만들었다는 것이 중요(*)
+- 서비스 제공자가 인터페이스를 정의할 필요 없이 구체화된 객체만 제공하고, 서비스 이용자가 필요에 따라 그때그때 인터페이스를 정의해 사용할 수 있음
+- 예시
+    두 종류의 데이터베이스 구조체가 Get / Set 메서드를 포함
+    사용하는 쪽에서 두 데이터베이스를 비교 하기 위한 시간 측정 함수를 만들고 싶음(TotalTime)
+    func TotalTime(db Database) int {
+        db.Get()
+        db.Set()
+    }
+    이를 위해 Database 인터페이스 정의
+    type Database interface {
+        Get()
+        Set()
+    }
+
+
+[인터페이스 기본값 nil]
+- 인터페이스 변수의 기본값은 유효하지 않은 메모리 주소를 나타내는 nil
+    type Attacker interface {
+        Attack()
+    }
+    func main() {
+        var attacker Attacker
+        attacker.Attack()       // <- attacker는 nil, 런타임 에러 발생
+    }
+
+
+[인터페이스 변환]
+- 인터페이스 변수를 타입 변환을 통해 구체화된 다른 타입이나 다른 인터페이스로 변환할 수 있다. 
+
+- 1. 구체화된 다른 타입으로 변환
+    - 인터페이스를 본래의 구체화된 타입으로 복원할 때 주로 사용됨
+    var a Interface
+    t := a.(ConcreteType)   // 인터페이스 변수에 .(타입)을 붙여 변환
+                            // 선언 대입문을 사용하엿기에 t의 타입은 ConcreteType
+    - 18_Interface/advanced2/interfaceConversion/interfaceConversion.go 참고
+
+- 2. 다른 인터페이스로 타입 변환
+    - 인터페이스 변환을 통해 구체화된 타입 뿐 아니라 다른 인터페이스로 타입 변환을 할 수 있다.
+    - 구체화된 타입으로의 변환과 달리 변경되는 인터페이스가 변경 전 인터페이스를 포함하지 않아도 된다. 
+    - 하지만 인터페이스가 가리키고 있는 '실제' 인스턴스가 변환하고자 하는 다른 인터페이스를 포함해야 한다.
+
+    var a InterfaceA = ConcreteType{}
+    b := a.(InterfaceB)
+
+    - 18_Interface/advanced3/interfaceConversion/interfaceConversion.go 참고
+
+
+[타입 변환 성공 여부 반환]
+- 타입 변환 가능 여부를 실행 중 검사할 수 있다면, 런타임 에러가 발생하지 않도록 할 수 있다.
+- 타입 변환 가능 여부를 확인하여 런타임 에러가 발생하지 않는 타입 변환 방법이 있다.
+
+    var a Interface
+    t, ok := a.(ConcreteType)
+
+- 위와 같이 타입 변환 반환값을 두 개의 변수로 받으면 타입 변환 가능 여부를 두 번째 반환값(불리언)으로 알린다.
+- 이때 타입 변환이 불가능하더라도 두번째 반환값이 false가 될 뿐 런타임 에러는 발생하지 않는다. 
+    
+    func ReadFile(reader Reader) {
+        // 타입 변환 가능 여부를 체크하여 Close() 메서드 호출
+        c, ok := reader.(Closer)
+        if ok {
+            c.Close()
+        }
+    }
+
+    // 한 줄 표현
+    if c, ok := reader.(Closer); ok {
+        ....
+    }
